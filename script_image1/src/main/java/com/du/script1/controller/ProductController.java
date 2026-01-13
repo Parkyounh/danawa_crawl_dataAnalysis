@@ -23,7 +23,7 @@ public class ProductController {
         return ResponseEntity.ok(productService.getProductList());
     }
 
-    // 2. 상세 조회 (이 부분이 누락되어 404가 발생했습니다)
+    // 2. 상세 조회
     @GetMapping("/product/{productCode}")
     public ResponseEntity<ProductDetailDto> getProductDetail(@PathVariable String productCode) {
         // 서비스 레이어에서 작성하신 getProductDetail 메서드를 호출합니다.

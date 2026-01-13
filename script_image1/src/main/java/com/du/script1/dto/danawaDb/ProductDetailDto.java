@@ -10,6 +10,7 @@ public class ProductDetailDto {
     // 기본 정보
     private String name;
     private String productCode;
+    private Integer categoryId;
     private Map<String, Object> specifications; // JSONB 데이터
 
     // 신규/구 DB에서 모은 리스트 데이터

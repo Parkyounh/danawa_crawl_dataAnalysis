@@ -82,6 +82,7 @@ public class ProductService {
         // 4. DTO 조립 (신규 DB 스펙 제외)
         return ProductDetailDto.builder()
                 .name(product.getName())
+                .categoryId(product.getCategoryId())
                 .productCode(product.getProductCode())
                 .specifications(product.getSpecifications()) // 구 DB Products에도 jsonb가 있다면 유지
                 .priceHistory(priceDtos)

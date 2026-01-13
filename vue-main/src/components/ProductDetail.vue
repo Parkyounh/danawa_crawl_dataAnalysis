@@ -8,8 +8,8 @@
       <div class="left-panel">
         <h2 class="title" v-if="data">상품 상세 정보</h2>
         <div class="image-box">
-          <img :src="`http://localhost:8083/danawa_db_image/112756/${data.productCode}.jpg`"
-               @error="e => e.target.src='/placeholder.png'" />
+          <img :src="`http://localhost:8083/danawa_db_image/${data.categoryId}/${data.productCode}.jpg`"
+                />
         </div>
       </div>
 

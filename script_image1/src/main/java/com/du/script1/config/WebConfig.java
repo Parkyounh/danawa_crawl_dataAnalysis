@@ -20,7 +20,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // 1. 이미지 폴더 매핑 (어느 컴퓨터에서나 작동하는 상대 경로)
+        // 1. 이미지 폴더 매핑
         registry.addResourceHandler("/danawa_db_image/**")
                 .addResourceLocations("classpath:/static/danawa_db_image/");
 
