@@ -1,0 +1,29 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: script1
+
+  datasource:
+    primary:
+      jdbc-url: jdbc:postgresql://localhost:5432/danawa_new_db
+      username: postgres
+      password: 1234
+      driver-class-name: org.postgresql.Driver
+    secondary:
+      jdbc-url: jdbc:postgresql://localhost:5432/danawa_db
+      username: postgres
+      password: 1234
+      driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+# 만약 H2 콘솔이나 Thymeleaf 설정이 더 필요하다면 이 아래에 이어서 작성
