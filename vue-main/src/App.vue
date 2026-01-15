@@ -2,8 +2,9 @@
   <div class="app">
     <ProductList
         v-if="view === 'list'"
-        :products="products"
+        :initialCategory="currentCategory"
         @view-detail="loadDetail"
+        @update-category="currentCategory = $event"
     />
 
     <ProductDetail
@@ -15,23 +16,21 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 import axios from 'axios';
 import ProductList from './components/ProductList.vue';
 import ProductDetail from './components/ProductDetail.vue';
 
 const view = ref('list');
-const products = ref([]);
 const detailData = ref(null);
+// 2. 현재 카테고리 상태를 부모에서 관리 (기본값 데스크탑)
+const currentCategory = ref('데스크탑');
 
-const loadDetail = async (code) => {
-  const res = await axios.get(`/api/product/${code}`);
+const loadDetail = async (code, isNew) => {
+  const apiPath = isNew ? '/api/new/product' : '/api/product';
+  const res = await axios.get(`http://localhost:8083${apiPath}/${code}`);
   detailData.value = res.data;
   view.value = 'detail';
 };
 
-onMounted(async () => {
-  const res = await axios.get('/api/product');
-  products.value = res.data;
-});
 </script>

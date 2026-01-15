@@ -20,7 +20,7 @@ public class NewReviews {
 
     private Integer rating;
 
-    @Column(columnDefinition = "text")
+    @Column(name = "review_text",columnDefinition = "text")
     private String reviewText;
 
     @Column(length = 100)

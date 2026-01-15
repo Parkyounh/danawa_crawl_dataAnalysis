@@ -6,10 +6,9 @@
 
     <div class="content-container" v-if="data">
       <div class="left-panel">
-        <h2 class="title" v-if="data">상품 상세 정보</h2>
+        <h2 class="title">상품 상세 정보</h2>
         <div class="image-box">
-          <img :src="`http://localhost:8083/danawa_db_image/${data.categoryId}/${data.productCode}.jpg`"
-                />
+          <img :src="data.imageUrl" @error="e => e.target.src='/placeholder.png'" />
         </div>
       </div>
 
@@ -17,7 +16,7 @@
         <h1 class="product-name">{{ data.name }}</h1>
         <p class="product-code">상품코드: {{ data.productCode }}</p>
 
-        <div class="spec-section" v-if="data.specifications">
+        <div class="spec-section" v-if="data.specifications && Object.keys(data.specifications).length > 0">
           <h3>상세 스펙</h3>
           <div class="spec-grid">
             <div v-for="(val, key) in data.specifications" :key="key" class="spec-item">
@@ -27,7 +26,7 @@
           </div>
         </div>
 
-        <div class="chart-section">
+        <div class="chart-section" v-if="data.priceHistory && data.priceHistory.length > 0">
           <h3>가격 변동 그래프</h3>
           <div class="canvas-holder">
             <canvas id="priceChart"></canvas>
@@ -46,9 +45,12 @@ const props = defineProps(['data']);
 const emit = defineEmits(['go-back']);
 
 onMounted(async () => {
-  if (!props.data || !props.data.priceHistory) return;
+  // 1. 데이터 자체가 없거나 priceHistory가 비어있으면 차트 로직 실행 안 함
+  if (!props.data || !props.data.priceHistory || props.data.priceHistory.length === 0) {
+    return;
+  }
 
-  // DOM이 완전히 렌더링된 후 차트를 그리기 위해 nextTick 사용
+  // 2. DOM 렌더링 완료 대기 (v-if로 인해 canvas가 생성된 후 접근해야 함)
   await nextTick();
 
   const canvas = document.getElementById('priceChart');
@@ -56,7 +58,7 @@ onMounted(async () => {
 
   const ctx = canvas.getContext('2d');
 
-  // 데이터 정렬 (날짜순)
+  // 데이터 가공 (날짜순 정렬)
   const sortedHistory = [...props.data.priceHistory].sort((a, b) => new Date(a.date) - new Date(b.date));
   const labels = sortedHistory.map(h => h.date);
   const prices = sortedHistory.map(h => h.price);

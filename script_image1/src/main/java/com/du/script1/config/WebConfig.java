@@ -20,11 +20,15 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // 1. 이미지 폴더 매핑
+        // 1. 기존 DB 이미지 매핑 (기존 방식 유지)
         registry.addResourceHandler("/danawa_db_image/**")
                 .addResourceLocations("classpath:/static/danawa_db_image/");
 
-        // 2. Vue 빌드 파일 매핑
+        // 2. 신규 DB 이미지 매핑 (추가)
+        registry.addResourceHandler("/danawa_new_db_image/**")
+                .addResourceLocations("classpath:/static/danawa_new_db_image/");
+
+        // 3. Vue 빌드 파일 및 기타 매핑
         registry.addResourceHandler("/**")
                 .addResourceLocations("classpath:/static/");
     }

@@ -12,6 +12,7 @@ public class ProductDetailDto {
     private String productCode;
     private Integer categoryId;
     private Map<String, Object> specifications; // JSONB 데이터
+    private String imageUrl;
 
     // 신규/구 DB에서 모은 리스트 데이터
     private List<PriceHistoryDto> priceHistory;
