@@ -9,15 +9,16 @@ import weaviate
 from weaviate.classes.config import Configure, Property, DataType
 from weaviate.classes.query import Filter  # Filter import 추가
 import os
+import sys
 from pathlib import Path
 
 class WeaviateManager:
     def __init__(self, host="localhost", port=8099):
         """Weaviate 클라이언트 초기화"""
         url = f"http://{host}:{port}"
-        print(f"Connecting to Weaviate at {url}...")
+        print(f"Connecting to Weaviate at {url}...", file=sys.stderr)
         self.client = weaviate.connect_to_local(host=host, port=port)
-        print("Connected to Weaviate")
+        print("Connected to Weaviate", file=sys.stderr)
         self.collection_name = "ProductImage"
     
     def create_schema(self):
@@ -26,7 +27,7 @@ class WeaviateManager:
             # 기존 컬렉션 삭제 (있으면)
             if self.client.collections.exists(self.collection_name):
                 self.client.collections.delete(self.collection_name)
-                print(f"Deleted existing collection: {self.collection_name}")
+                print(f"Deleted existing collection: {self.collection_name}", file=sys.stderr)
             
             # 새 컬렉션 생성
             self.client.collections.create(
@@ -38,10 +39,10 @@ class WeaviateManager:
                     Property(name="image_name", data_type=DataType.TEXT),
                 ]
             )
-            print(f"Created collection: {self.collection_name}")
+            print(f"Created collection: {self.collection_name}", file=sys.stderr)
             return True
         except Exception as e:
-            print(f"Schema creation failed: {e}")
+            print(f"Schema creation failed: {e}", file=sys.stderr)
             return False
     
     def insert_image(self, product_id, image_path, vector):
@@ -60,10 +61,10 @@ class WeaviateManager:
                 vector=vector
             )
             
-            print(f"✓ Inserted: {image_name} (ID: {product_id})")
+            print(f"✓ Inserted: {image_name} (ID: {product_id})", file=sys.stderr)
             return True
         except Exception as e:
-            print(f"✗ Insert failed for {image_path}: {e}")
+            print(f"✗ Insert failed for {image_path}: {e}", file=sys.stderr)
             return False
     
     def batch_insert(self, data_list):
@@ -90,20 +91,26 @@ class WeaviateManager:
                     )
                     success_count += 1
                 except Exception as e:
-                    print(f"✗ Batch insert failed: {e}")
+                    print(f"✗ Batch insert failed: {e}", file=sys.stderr)
                     fail_count += 1
         
-        print(f"\nBatch insert completed: {success_count} success, {fail_count} failed")
+        print(f"\nBatch insert completed: {success_count} success, {fail_count} failed", file=sys.stderr)
         return success_count, fail_count
     
-    def search_similar(self, query_vector, limit=10):
-        """벡터 유사도 검색"""
+    def search_similar(self, query_vector, limit=10, filter_ids=None):
+        """벡터 유사도 검색 (필터 포함)"""
         try:
             collection = self.client.collections.get(self.collection_name)
+            
+            # 필터 조건 생성
+            filters = None
+            if filter_ids and len(filter_ids) > 0:
+                filters = Filter.by_property("product_id").contains_any(filter_ids)
             
             response = collection.query.near_vector(
                 near_vector=query_vector,
                 limit=limit,
+                filters=filters,
                 return_metadata=['distance', 'certainty']
             )
             
@@ -129,9 +136,9 @@ class WeaviateManager:
             
             return results
         except Exception as e:
-            print(f"Search failed: {e}")
+            print(f"Search failed: {e}", file=sys.stderr)
             import traceback
-            traceback.print_exc()
+            traceback.print_exc(file=sys.stderr)
             return []
     
     def get_vector_by_id(self, product_id):
@@ -152,10 +159,10 @@ class WeaviateManager:
                     return vector['default']
                 return vector
             else:
-                print(f"No vector found for product_id: {product_id}")
+                print(f"No vector found for product_id: {product_id}", file=sys.stderr)
                 return None
         except Exception as e:
-            print(f"Get vector failed: {e}")
+            print(f"Get vector failed: {e}", file=sys.stderr)
             return None
     
     def count_objects(self):
@@ -164,16 +171,16 @@ class WeaviateManager:
             collection = self.client.collections.get(self.collection_name)
             result = collection.aggregate.over_all(total_count=True)
             count = result.total_count
-            print(f"Total objects in {self.collection_name}: {count}")
+            print(f"Total objects in {self.collection_name}: {count}", file=sys.stderr)
             return count
         except Exception as e:
-            print(f"Count failed: {e}")
+            print(f"Count failed: {e}", file=sys.stderr)
             return 0
     
     def close(self):
         """연결 종료"""
         self.client.close()
-        print("Weaviate connection closed")
+        print("Weaviate connection closed", file=sys.stderr)
 
 
 if __name__ == "__main__":

@@ -11,13 +11,14 @@ import json
 import sys
 from weaviate_manager import WeaviateManager
 
-def search_similar_images(product_id, top_n=10):
+def search_similar_images(product_id, top_n=10, filters=None):
     """
     주어진 product_id와 유사한 이미지 검색
     
     Args:
         product_id: 검색할 상품 ID
         top_n: 반환할 유사 이미지 개수
+        filters: 검색 대상 product_id 리스트 (선택사항)
     
     Returns:
         JSON 형식의 유사 이미지 리스트
@@ -28,6 +29,20 @@ def search_similar_images(product_id, top_n=10):
         # Weaviate 연결
         manager = WeaviateManager()
         
+        # ID 보정 (확장자 추가)
+        if not product_id.lower().endswith(('.jpg', '.jpeg', '.png', '.webp')):
+             product_id = f"{product_id}.jpg"
+             
+        # 필터 ID 보정
+        final_filters = None
+        if filters:
+            final_filters = []
+            for f_id in filters:
+                if not f_id.lower().endswith(('.jpg', '.jpeg', '.png', '.webp')):
+                    final_filters.append(f"{f_id}.jpg")
+                else:
+                    final_filters.append(f_id)
+        
         # 1. product_id로 벡터 조회
         query_vector = manager.get_vector_by_id(product_id)
         
@@ -37,8 +52,8 @@ def search_similar_images(product_id, top_n=10):
                 'error': f'Product ID {product_id} not found in database'
             }
         
-        # 2. 유사도 검색 (자기 자신 포함 top_n+1개 가져오기)
-        results = manager.search_similar(query_vector, limit=top_n + 1)
+        # 2. 유사도 검색 (필터 적용)
+        results = manager.search_similar(query_vector, limit=top_n + 1, filter_ids=final_filters)
         
         # 3. 자기 자신 제외
         filtered_results = [
@@ -66,14 +81,20 @@ def search_similar_images(product_id, top_n=10):
 
 def main():
     parser = argparse.ArgumentParser(description='Search similar images by product ID')
-    parser.add_argument('--id', type=str, required=True, help='Product ID to search')  # int -> str
+    parser.add_argument('--id', type=str, required=True, help='Product ID to search')
     parser.add_argument('--top', type=int, default=10, help='Number of similar images to return')
+    parser.add_argument('--filters', type=str, help='Comma-separated list of product IDs to filter by')
     parser.add_argument('--pretty', action='store_true', help='Pretty print JSON output')
     
     args = parser.parse_args()
     
+    # 필터 파싱
+    filter_list = None
+    if args.filters:
+        filter_list = [f.strip() for f in args.filters.split(',') if f.strip()]
+    
     # 유사 이미지 검색
-    result = search_similar_images(args.id, args.top)
+    result = search_similar_images(args.id, args.top, filter_list)
     
     # JSON 출력
     if args.pretty:

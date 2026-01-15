@@ -1,73 +1,43 @@
-//package com.du.script1.controller;
-//
-//import com.du.script1.service.RagService;
-//import com.du.script1.service.ImageSimilarityService;
-//import lombok.RequiredArgsConstructor;
-//import lombok.extern.slf4j.Slf4j;
-//import org.springframework.http.ResponseEntity;
-//import org.springframework.stereotype.Controller;
-//import org.springframework.web.bind.annotation.*;
-//
-//import java.util.List;
-//import java.util.Map;
-//
-//@Slf4j
-//@Controller
-//@RequiredArgsConstructor
-//public class RagController {
-//
-//    private final RagService ragService;
-//    private final ImageSimilarityService imageSimilarityService;
-//
-//    @GetMapping("/api/products")
-//    @ResponseBody
-//    public ResponseEntity<List<Product>> getAllProducts() {
-//
-//        return ResponseEntity.ok(productRepository.findAll());
-//    }
-//
-//    /**
-//     * 검색 결과 JSON API
-//     */
-//    @GetMapping("/api/search")
-//    @ResponseBody
-//    public ResponseEntity<Map<String, Object>> searchProducts(@RequestParam String query) {
-//        log.info("검색 API: {}", query);
-//        Map<String, Object> result = ragService.searchAndStructure(query);
-//        return ResponseEntity.ok(result);
-//    }
-//
-//    /**
-//     * 두 상품 비교 API
-//     */
-//    @PostMapping("/api/compare")
-//    @ResponseBody
-//    public ResponseEntity<Map<String, Object>> compareProducts(@RequestBody Map<String, Long> request) {
-//        Long pcode1 = request.get("pcode1");
-//        Long pcode2 = request.get("pcode2");
-//
-//        log.info("상품 비교 요청: {} vs {}", pcode1, pcode2);
-//
-//        String result = ragService.compareProducts(pcode1, pcode2);
-//
-//        return ResponseEntity.ok(Map.of(
-//            "pcode1", pcode1,
-//            "pcode2", pcode2,
-//            "analysis", result
-//        ));
-//    }
-//
-//    /**
-//     * 유사 이미지 검색 API
-//     */
-//    @GetMapping("/api/similar-images")
-//    @ResponseBody
-//    public ResponseEntity<Map<String, Object>> searchSimilarImages(
-//            @RequestParam String pcode,
-//            @RequestParam(defaultValue = "10") int top) {
-//
-//        log.info("유사 이미지 검색 요청: pcode={}, top={}", pcode, top);
-//        Map<String, Object> result = imageSimilarityService.searchSimilarImages(pcode, top);
-//        return ResponseEntity.ok(result);
-//    }
-//}
+package com.du.script1.controller;
+
+import com.du.script1.service.ImageSimilarityService;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+
+@Slf4j
+@RestController
+@RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:8081")
+public class RagController {
+
+    private final ImageSimilarityService imageSimilarityService;
+
+    @Data
+    @NoArgsConstructor // JSON 파싱을 위한 기본 생성자
+    @AllArgsConstructor // 모든 필드 생성자
+    public static class SimilarImageRequest {
+        private String pcode;
+        private int top;
+        private List<String> filters; // 현재 Payload가 ["123", "456"] 배열이므로 List여야 함
+    }
+
+    @PostMapping("/api/similar-images")
+    public ResponseEntity<Map<String, Object>> searchSimilarImages(@RequestBody SimilarImageRequest request) {
+        log.info("유사 이미지 검색 요청 수신: pcode={}, filters={}", request.getPcode(), request.getFilters());
+
+        Map<String, Object> result = imageSimilarityService.searchSimilarImages(
+                request.getPcode(),
+                request.getTop(),
+                request.getFilters()
+        );
+        return ResponseEntity.ok(result);
+    }
+}

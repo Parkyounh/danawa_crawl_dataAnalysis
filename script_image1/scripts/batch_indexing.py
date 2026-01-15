@@ -1,6 +1,6 @@
 """
 배치 인덱싱 스크립트
-C:\_dev5\국책\수동크롤링\imagesv2 폴더의 모든 이미지를
+static/danawa_db_image 폴더의 카테고리별 이미지를
 CLIP으로 벡터화하여 Weaviate에 저장
 
 실행: python batch_indexing.py
@@ -12,23 +12,37 @@ from clip_processor import CLIPImageProcessor
 from weaviate_manager import WeaviateManager
 
 # 설정
-IMAGE_FOLDER = r"C:\_dev5\국책\수동크롤링\imagesv2"
+# static 폴더 경로 (script_image1 기준 상대 경로)
+BASE_DIR = Path(__file__).parent.parent  # script_image1 폴더
+IMAGE_FOLDER = r"C:\Users\DU\Desktop\clone\image_Similarity\script_image1\src\main\resources\static\danawa_db_image"
+
+# 카테고리 폴더 목록
+CATEGORY_FOLDERS = ["112756", "15236036", "18234911", "18242355"]
+
 REMOVE_BACKGROUND = True  # 배경 제거 여부
 BATCH_SIZE = 16  # 한번에 처리할 이미지 수
 
-def get_image_files(folder_path):
-    """폴더에서 모든 이미지 파일 경로 가져오기"""
+def get_image_files(base_folder, category_folders):
+    """지정된 카테고리 폴더들에서 모든 이미지 파일 경로 가져오기"""
     image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.webp'}
     image_files = []
     
-    folder = Path(folder_path)
-    if not folder.exists():
-        print(f"Error: Folder not found: {folder_path}")
+    base_path = Path(base_folder)
+    if not base_path.exists():
+        print(f"Error: Base folder not found: {base_folder}")
         return []
     
-    for file in folder.iterdir():
-        if file.is_file() and file.suffix.lower() in image_extensions:
-            image_files.append(str(file))
+    for category in category_folders:
+        category_path = base_path / category
+        if not category_path.exists():
+            print(f"Warning: Category folder not found: {category_path}")
+            continue
+            
+        for file in category_path.iterdir():
+            if file.is_file() and file.suffix.lower() in image_extensions:
+                image_files.append(str(file))
+        
+        print(f"  - {category}: {len([f for f in category_path.iterdir() if f.suffix.lower() in image_extensions])} images")
     
     return sorted(image_files)
 
@@ -47,7 +61,8 @@ def main():
     
     # 1. 이미지 파일 목록 가져오기
     print(f"\n[1/5] Scanning images from: {IMAGE_FOLDER}")
-    image_files = get_image_files(IMAGE_FOLDER)
+    print(f"Categories: {CATEGORY_FOLDERS}")
+    image_files = get_image_files(IMAGE_FOLDER, CATEGORY_FOLDERS)
     
     if not image_files:
         print("No image files found!")
