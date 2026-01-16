@@ -3,6 +3,7 @@ package com.du.script1.service;
 import com.du.script1.domain.danawaDb.PriceHistory;
 import com.du.script1.domain.danawaDb.Products;
 import com.du.script1.domain.danawaDb.Reviews;
+import com.du.script1.dto.danawaDb.CategorySpecDto;
 import com.du.script1.dto.danawaDb.ProductDetailDto;
 import com.du.script1.dto.danawaDb.ProductListDto;
 import com.du.script1.repository.danawaDb.PriceHistoryRepository;
@@ -16,7 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -126,5 +127,44 @@ public class ProductService {
             case "신발" -> 18242355;
             default -> null;
         };
+    }
+
+    //필터 정리
+    @Transactional(readOnly = true, transactionManager = "secondaryTransactionManager")
+    public CategorySpecDto getCategorySpecFilters(String categoryName) {
+        Integer categoryId = getCategoryIdFromName(categoryName);
+        if (categoryId == null) return null;
+
+        // 1. DB에서 이미 Map으로 변환된 스펙 리스트를 가져옴
+        List<Map<String, Object>> specMaps = productsRepository.findSpecificationsByCategoryId(categoryId);
+
+        // 가나다순 정렬을 위한 TreeMap/TreeSet
+        Map<String, Set<String>> specMapResult = new TreeMap<>();
+
+        for (Map<String, Object> singleSpec : specMaps) {
+            if (singleSpec == null) continue;
+
+            singleSpec.forEach((key, value) -> {
+                String trimmedKey = key.trim();
+                // 제외할 키 필터링
+                if (!isExcludedKey(trimmedKey) && value != null) {
+                    String stringValue = String.valueOf(value).trim();
+                    if (!stringValue.isEmpty()) {
+                        specMapResult.computeIfAbsent(trimmedKey, k -> new TreeSet<>()).add(stringValue);
+                    }
+                }
+            });
+        }
+
+        return CategorySpecDto.builder()
+                .categoryId(categoryId)
+                .categoryName(categoryName)
+                .specs(specMapResult)
+                .build();
+    }
+
+    // 필터 UI에서 굳이 보여줄 필요 없는 키들 제외
+    private boolean isExcludedKey(String key) {
+        return List.of("안전확인인증", "적합성평가인증", "등록년월", "제조회사").contains(key);
     }
 }

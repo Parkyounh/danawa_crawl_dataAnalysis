@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
@@ -30,4 +31,8 @@ public interface ProductsRepository extends JpaRepository<Products, Integer> {
             @Param("categoryId") Integer categoryId,
             @Param("name") String name,
             Pageable pageable);
+
+    // filter 가져오기
+    @Query("SELECT p.specifications FROM Products p WHERE p.categoryId = :categoryId")
+    List<Map<String, Object>> findSpecificationsByCategoryId(@Param("categoryId") Integer categoryId);
 }

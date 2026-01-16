@@ -1,5 +1,6 @@
 package com.du.script1.controller;
 
+import com.du.script1.dto.danawaDb.CategorySpecDto;
 import com.du.script1.dto.danawaDb.ProductDetailDto;
 import com.du.script1.dto.danawaDb.ProductListDto;
 import com.du.script1.service.ProductService;
@@ -35,5 +36,14 @@ public class ProductController {
     public ResponseEntity<ProductDetailDto> getProductDetail(@PathVariable String productCode) {
         // 서비스 레이어에서 작성하신 getProductDetail 메서드를 호출합니다.
         return ResponseEntity.ok(productService.getProductDetail(productCode));
+    }
+
+    @GetMapping("/category/specs")
+    public ResponseEntity<CategorySpecDto> getCategorySpecs(@RequestParam String category) {
+        CategorySpecDto specDto = productService.getCategorySpecFilters(category);
+        if (specDto == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(specDto);
     }
 }

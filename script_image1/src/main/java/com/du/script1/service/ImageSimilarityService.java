@@ -27,9 +27,6 @@ public class ImageSimilarityService {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final NewProductsRepository newProductsRepository; // 신규 리포지토리로 변경
 
-
-
-
     // 파라미터 타입을 Map으로 변경하여 Controller와 일치시킴
     public Map<String, Object> searchSimilarImages(String productId, int topN, List<String> filters) {
         Map<String, Object> result = new LinkedHashMap<>();
